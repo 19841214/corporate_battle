@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CORP BATTLE · v2 — Taiwan + World Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Serif+TC:wght@500;700;900&family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-0: #0a0e1a;
+    --bg-1: #131826;
+    --bg-2: #1a2238;
+    --bg-3: #232b45;
+    --line: rgba(255,255,255,0.08);
+    --line-hi: rgba(255,255,255,0.16);
+    --text-0: #f5f7fa;
+    --text-1: #a8b2c7;
+    --text-2: #6b7593;
+    --text-3: #4a5170;
+    --neon-g: #5fffaa;
+    --neon-p: #b794ff;
+    --neon-y: #ffe066;
+    --neon-pink: #ff7ac6;
+    --danger: #ff5577;
+    --hp: #5fffaa;
+    --atk: #ff8855;
+    --def: #6bb8ff;
+
+    --type-tech: #b794ff;
+    --type-manuf: #ff8855;
+    --type-ship: #4dd0e1;
+    --type-cons: #ffd166;
+    --type-fin: #5fffaa;
+    --type-energy: #ff5577;
+
+    --tier-bronze: #c08858;
+    --tier-silver: #b0c4de;
+    --tier-gold: #ffd700;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'JetBrains Mono', 'Noto Serif TC', monospace;
+    background: var(--bg-0);
+    color: var(--text-0);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(183,148,255,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(95,255,170,0.06), transparent 45%),
+      linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+    background-size: auto, auto, 30px 30px, 30px 30px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .container {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 16px;
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* ========================================================
+     HEADER & TOP NAV
+  ======================================================== */
+  header {
+    border-bottom: 1px solid var(--line);
+    padding: 12px 0 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .brand h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    line-height: 0.9;
+    background: linear-gradient(135deg, var(--neon-g) 0%, var(--neon-p) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .brand .ver {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--neon-g);
+    border: 1px solid var(--neon-g);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .conn-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 1px;
+  }
+  .conn-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text-2);
+    animation: pulse 2s infinite;
+  }
+  .conn-dot.online { background: var(--neon-g); box-shadow: 0 0 8px var(--neon-g); }
+  .conn-dot.error { background: var(--danger); }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* ========================================================
+     BOTTOM TAB BAR
+  ======================================================== */
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 14, 26, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    display: flex;
+    z-index: 100;
+    padding: 4px;
+  }
+  .tab-bar-inner {
+    max-width: 520px;
+    margin: 0 auto;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-2);
+    padding: 10px 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 4px;
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+  .tab-btn .tab-icon {
+    font-size: 18px;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(95,255,170,0.15), rgba(183,148,255,0.15));
+    color: var(--neon-g);
+  }
+
+  /* ========================================================
+     SCREENS
+  ======================================================== */
+  .screen { display: none; animation: fadeIn 0.3s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========================================================
+     LOGIN SCREEN
+  ======================================================== */
+  .hero {
+    text-align: center;
+    padding: 24px 0;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px;
+    letter-spacing: 4px;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--neon-g), var(--neon-p));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+  }
+  .hero-zh {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 20px;
+    color: var(--text-1);
+    letter-spacing: 8px;
+    margin-bottom: 4px;
+  }
+  .hero-tag {
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 20px 0;
+  }
+  .hero-stat {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .hero-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    background: linear-gradient(135deg, var(--neon-g), var(--neon-p));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 9px;
+    color: var(--text-2);
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .login-form {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+  .form-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-2);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .form-label .zh { color: var(--text-1); margin-left: 6px; }
+  .form-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    color: var(--text-0);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: var(--neon-g);
+    background: rgba(95,255,170,0.05);
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: var(--neon-g);
+    color: var(--bg-0);
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-primary:hover { background: var(--neon-p); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--text-1);
+    border: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 12px;
+    text-transform: uppercase;
+  }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 11px;
+    padding: 10px 12px;
+    background: rgba(255,85,119,0.1);
+    border-left: 3px solid var(--danger);
+    border-radius: 4px;
+    margin-top: 12px;
+    line-height: 1.5;
+  }
+  .info-msg {
+    color: var(--neon-g);
+    font-size: 11px;
+    padding: 10px 12px;
+    background: rgba(95,255,170,0.08);
+    border-left: 3px solid var(--neon-g);
+    border-radius: 4px;
+    margin-top: 12px;
+  }
+
+  /* ========================================================
+     PROGRESS BAR (UNLOCK)
+  ======================================================== */
+  .progress-card {
+    background: linear-gradient(135deg, rgba(255,224,102,0.05), rgba(183,148,255,0.05));
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+  }
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .progress-title {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: var(--text-1);
+    text-transform: uppercase;
+  }
+  .progress-stats {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--neon-g);
+  }
+  .progress-bar {
+    height: 8px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-g), var(--neon-y));
+    border-radius: 4px;
+    transition: width 0.6s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  .progress-tier-list {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .progress-tier {
+    flex: 1;
+    text-align: center;
+    padding: 6px 4px;
+    border-radius: 4px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid var(--line);
+    color: var(--text-3);
+  }
+  .progress-tier.unlocked {
+    border-color: var(--neon-g);
+    color: var(--neon-g);
+    background: rgba(95,255,170,0.05);
+  }
+  .progress-tier.unlocked.bronze { border-color: var(--tier-bronze); color: var(--tier-bronze); }
+  .progress-tier.unlocked.silver { border-color: var(--tier-silver); color: var(--tier-silver); }
+  .progress-tier.unlocked.gold { border-color: var(--tier-gold); color: var(--tier-gold); }
+
+  /* ========================================================
+     CARD BROWSER (catalog)
+  ======================================================== */
+  .filter-bar {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  .filter-search {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    color: var(--text-0);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .filter-search:focus { outline: none; border-color: var(--neon-g); }
+  .filter-search::placeholder { color: var(--text-3); }
+
+  .filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .filter-row:last-child { margin-bottom: 0; }
+  .filter-label {
+    font-size: 9px;
+    color: var(--text-2);
+    letter-spacing: 1.5px;
+    width: 100%;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .chip {
+    padding: 5px 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    color: var(--text-1);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .chip.active {
+    background: var(--neon-g);
+    color: var(--bg-0);
+    border-color: var(--neon-g);
+    font-weight: 700;
+  }
+  .chip:hover:not(.active) { border-color: var(--text-2); }
+
+  .browser-stats {
+    font-size: 10px;
+    color: var(--text-2);
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    letter-spacing: 1px;
+  }
+  .browser-stats .count {
+    color: var(--neon-g);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 2px;
+  }
+
+  /* ========================================================
+     CARD
+  ======================================================== */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+  }
+  .card.selected {
+    border-color: var(--neon-g);
+    box-shadow: 0 0 0 2px var(--neon-g), 0 0 20px rgba(95,255,170,0.3);
+    transform: translateY(-2px);
+  }
+  .card.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .card.locked::after {
+    content: '🔒';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    backdrop-filter: blur(2px);
+    border-radius: 8px;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--type-color);
+  }
+  .card-flag {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .card-id {
+    font-size: 8px;
+    color: var(--text-2);
+    letter-spacing: 1px;
+    margin-left: 24px;
+  }
+  .card-type {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: var(--type-color);
+    color: var(--bg-0);
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .card-tier-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-radius: 2px;
+    font-weight: 700;
+  }
+  .card-tier-badge.bronze { background: var(--tier-bronze); color: var(--bg-0); }
+  .card-tier-badge.silver { background: var(--tier-silver); color: var(--bg-0); }
+  .card-tier-badge.gold { background: var(--tier-gold); color: var(--bg-0); }
+  .card-name-zh {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-top: 4px;
+  }
+  .card-name-en {
+    font-size: 9px;
+    color: var(--text-1);
+    margin-bottom: 8px;
+    line-height: 1.2;
+  }
+  .card-stats-mini {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 6px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 3px;
+    margin-top: auto;
+  }
+  .stat-mini {
+    flex: 1;
+    text-align: center;
+  }
+  .stat-mini-label {
+    font-size: 7px;
+    color: var(--text-2);
+    letter-spacing: 1px;
+  }
+  .stat-mini-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    line-height: 1;
+  }
+  .stat-mini-val.hp { color: var(--hp); }
+  .stat-mini-val.atk { color: var(--atk); }
+  .stat-mini-val.def { color: var(--def); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-2);
+    font-size: 12px;
+  }
+  .empty-state .big {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .confirm-bar {
+    position: sticky;
+    bottom: 76px;
+    margin-top: 16px;
+    padding: 12px 0;
+    background: linear-gradient(transparent, var(--bg-0) 30%);
+  }
+
+  /* ========================================================
+     WAITING SCREEN
+  ======================================================== */
+  .waiting-card {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  .waiting-room-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    color: var(--neon-g);
+    letter-spacing: 8px;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(95,255,170,0.4);
+  }
+  .waiting-label {
+    font-size: 10px;
+    color: var(--text-2);
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .waiting-status {
+    margin-top: 24px;
+    padding: 16px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    border: 1px dashed var(--line);
+  }
+  .waiting-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--line);
+    border-top-color: var(--neon-g);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+    margin-right: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .waiting-players {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    margin-top: 24px;
+    align-items: center;
+  }
+  .waiting-player {
+    background: var(--bg-2);
+    padding: 12px;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid var(--line);
+  }
+  .waiting-player.you { border-color: var(--neon-g); }
+  .waiting-player.empty { opacity: 0.4; border-style: dashed; }
+  .wp-label { font-size: 9px; color: var(--text-2); letter-spacing: 2px; margin-bottom: 4px; }
+  .wp-name { font-family: 'Noto Serif TC', serif; font-size: 16px; font-weight: 700; }
+  .vs-mini { font-family: 'Bebas Neue', sans-serif; font-size: 24px; color: var(--neon-y); }
+
+  /* ========================================================
+     BATTLE SCREEN
+  ======================================================== */
+  .scenario-bar {
+    background: linear-gradient(135deg, rgba(255,224,102,0.12), rgba(183,148,255,0.12));
+    border: 1px dashed var(--neon-y);
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .scenario-bar-icon { font-size: 24px; }
+  .scenario-bar-info { flex: 1; }
+  .scenario-bar-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    color: var(--neon-y);
+  }
+  .scenario-bar-zh { font-size: 10px; color: var(--text-1); margin-top: 2px; }
+  .scenario-bar-eff { font-size: 9px; color: var(--text-2); margin-top: 2px; line-height: 1.3; }
+
+  .turn-indicator {
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 3px;
+  }
+  .turn-indicator.your {
+    background: var(--neon-g);
+    color: var(--bg-0);
+    animation: pulse-bg 1.5s infinite;
+  }
+  .turn-indicator.opp {
+    background: var(--bg-1);
+    color: var(--text-1);
+    border: 1px solid var(--line);
+  }
+  @keyframes pulse-bg {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(95,255,170,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(95,255,170,0); }
+  }
+
+  .battle-card {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .battle-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--type-color);
+  }
+  .battle-card.opp { border-left: 3px solid var(--neon-p); }
+  .battle-card.you { border-left: 3px solid var(--neon-g); }
+  .battle-card.shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .bc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .bc-side-label { font-size: 9px; color: var(--text-2); letter-spacing: 2px; text-transform: uppercase; }
+  .bc-player-name { font-family: 'Noto Serif TC', serif; font-size: 13px; color: var(--text-1); font-weight: 700; }
+  .bc-body { display: flex; gap: 12px; align-items: center; }
+  .bc-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--type-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    color: var(--bg-0);
+    font-size: 11px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 4px;
+    line-height: 1;
+  }
+  .bc-info { flex: 1; min-width: 0; }
+  .bc-name { font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 700; line-height: 1.1; }
+  .bc-name-en { font-size: 9px; color: var(--text-2); margin-bottom: 6px; }
+
+  .hp-bar {
+    background: rgba(0,0,0,0.4);
+    height: 14px;
+    border-radius: 7px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-g), #4dd0e1);
+    transition: width 0.6s ease;
+  }
+  .hp-fill.low { background: linear-gradient(90deg, var(--neon-y), var(--atk)); }
+  .hp-fill.critical { background: linear-gradient(90deg, var(--atk), var(--danger)); }
+  .hp-text {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--bg-0);
+    text-shadow: 0 0 4px rgba(255,255,255,0.5);
+  }
+
+  .skill-buttons { display: grid; gap: 8px; margin-top: 12px; }
+  .skill-btn {
+    padding: 12px 14px;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    color: var(--text-0);
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    border-radius: 6px;
+    text-align: left;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .skill-btn:not(:disabled):hover {
+    border-color: var(--neon-g);
+    background: rgba(95,255,170,0.05);
+  }
+  .skill-btn:not(:disabled):active { transform: scale(0.98); }
+  .skill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .skill-btn-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .skill-btn-name { font-weight: 700; font-size: 12px; color: var(--neon-g); }
+  .skill-btn-dmg { font-family: 'Bebas Neue'; font-size: 22px; color: var(--atk); }
+
+  .battle-log {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 16px;
+    max-height: 160px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+  .battle-log h4 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: var(--neon-g);
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+  }
+  .log-entry {
+    padding: 4px 0;
+    color: var(--text-1);
+    line-height: 1.4;
+    border-bottom: 1px dotted rgba(255,255,255,0.04);
+  }
+  .log-entry.crit { color: var(--neon-y); }
+  .log-entry.dmg { color: var(--atk); }
+  .log-entry.win { color: var(--neon-g); font-weight: 700; }
+
+  /* ========================================================
+     END SCREEN
+  ======================================================== */
+  .end-screen { text-align: center; padding: 24px 16px; }
+  .end-icon {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 80px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .end-icon.win {
+    background: linear-gradient(135deg, var(--neon-g), var(--neon-y));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .end-icon.lose { color: var(--danger); }
+  .end-title { font-family: 'Noto Serif TC'; font-size: 22px; font-weight: 900; margin-bottom: 16px; }
+  .end-stats {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+    text-align: left;
+  }
+  .end-stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--line);
+    font-size: 11px;
+  }
+  .end-stat-row:last-child { border-bottom: none; }
+  .end-stat-label { color: var(--text-2); }
+  .end-stat-val { color: var(--text-0); font-weight: 700; }
+
+  .unlock-banner {
+    background: linear-gradient(135deg, var(--neon-y), var(--neon-pink));
+    color: var(--bg-0);
+    padding: 16px;
+    border-radius: 8px;
+    margin: 16px 0;
+    text-align: center;
+    animation: unlockGlow 2s infinite;
+  }
+  @keyframes unlockGlow {
+    0%, 100% { box-shadow: 0 0 20px rgba(255,224,102,0.4); }
+    50% { box-shadow: 0 0 40px rgba(255,224,102,0.7); }
+  }
+  .unlock-banner-title { font-family: 'Bebas Neue'; font-size: 28px; letter-spacing: 3px; }
+  .unlock-banner-zh { font-size: 12px; font-weight: 700; }
+
+  /* ========================================================
+     ADMIN (TEACHER) VIEW
+  ======================================================== */
+  .admin-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .admin-stat-card {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+  }
+  .admin-stat-num {
+    font-family: 'Bebas Neue';
+    font-size: 32px;
+    color: var(--neon-g);
+    line-height: 1;
+  }
+  .admin-stat-label {
+    font-size: 9px;
+    color: var(--text-2);
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .admin-room-list { display: flex; flex-direction: column; gap: 6px; }
+  .admin-room-item {
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    font-size: 11px;
+  }
+  .admin-room-item .roomid {
+    font-family: 'Bebas Neue';
+    font-size: 18px;
+    color: var(--neon-g);
+    letter-spacing: 2px;
+  }
+  .admin-room-item .players {
+    font-family: 'Noto Serif TC';
+    font-size: 12px;
+    color: var(--text-1);
+  }
+  .admin-room-item .status {
+    font-size: 9px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .status-waiting { background: var(--bg-2); color: var(--text-2); }
+  .status-selecting { background: rgba(255,224,102,0.15); color: var(--neon-y); }
+  .status-playing { background: rgba(95,255,170,0.15); color: var(--neon-g); }
+  .status-ended { background: var(--bg-2); color: var(--text-3); }
+
+  .admin-section-title {
+    font-family: 'Bebas Neue';
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--text-1);
+    margin: 20px 0 10px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 6px;
+  }
+
+  .leaderboard-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg-1);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    margin-bottom: 4px;
+    align-items: center;
+    font-size: 11px;
+  }
+  .leaderboard-row .rank {
+    font-family: 'Bebas Neue';
+    font-size: 16px;
+    color: var(--text-2);
+    width: 24px;
+  }
+  .leaderboard-row.top1 .rank { color: var(--neon-y); }
+  .leaderboard-row.top2 .rank { color: var(--tier-silver); }
+  .leaderboard-row.top3 .rank { color: var(--tier-bronze); }
+  .leaderboard-row .name { font-family: 'Noto Serif TC'; font-weight: 700; }
+  .leaderboard-row .wins { font-family: 'Bebas Neue'; font-size: 16px; color: var(--neon-g); }
+  .leaderboard-row .ratio { font-size: 9px; color: var(--text-2); }
+
+  /* ========================================================
+     UTILS
+  ======================================================== */
+  .small { font-size: 10px; color: var(--text-2); }
+  .center { text-align: center; }
+  .toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-2);
+    color: var(--text-0);
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--neon-g);
+    font-size: 12px;
+    z-index: 999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .toast.show { opacity: 1; }
+
+  .screen-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+    color: var(--neon-g);
+  }
+  .screen-subtitle {
+    font-size: 11px;
+    color: var(--text-2);
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <h1>CORP BATTLE</h1>
+      <span class="ver">v3 · 100</span>
+    </div>
+    <div class="conn-indicator">
+      <span class="conn-dot" id="conn-dot"></span>
+      <span id="conn-text">CONNECTING</span>
+    </div>
+  </header>
+
+  <!-- ====================================================
+       SCREEN: HOME (Login + Browse + Stats)
+  ==================================================== -->
+  <div class="screen active" id="screen-home">
+    <div class="hero">
+      <div class="hero-title">CORP BATTLE</div>
+      <div class="hero-zh">企業對戰</div>
+      <div class="hero-tag">100 cards · World Edition · 2026</div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">100</div>
+        <div class="hero-stat-label">CARDS</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">7</div>
+        <div class="hero-stat-label">COUNTRIES</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">15</div>
+        <div class="hero-stat-label">EVENTS</div>
+      </div>
+    </div>
+
+    <div class="login-form">
+      <label class="form-label">YOUR NAME <span class="zh">姓名</span></label>
+      <input type="text" class="form-input" id="input-name" placeholder="例：王小明" maxlength="20">
+      <label class="form-label">ROOM CODE <span class="zh">房號</span></label>
+      <input type="text" class="form-input" id="input-room" placeholder="例：1001" maxlength="6" inputmode="numeric">
+      <button class="btn-primary" id="btn-join">▶ JOIN BATTLE 進入對戰</button>
+      <div id="login-msg"></div>
+    </div>
+
+    <div id="player-progress-area"></div>
+
+    <div class="small center" style="margin-top:16px;">
+      測試房號 1001–1005<br>
+      Test rooms · Two players join the same room
+    </div>
+  </div>
+
+  <!-- ====================================================
+       SCREEN: CARD CATALOG (browse all 100)
+  ==================================================== -->
+  <div class="screen" id="screen-catalog">
+    <div class="screen-title">CARD CATALOG</div>
+    <div class="screen-subtitle">100 張卡牌瀏覽器 · Browse all cards</div>
+
+    <div class="filter-bar">
+      <input type="text" class="filter-search" id="search-input"
+             placeholder="🔍 搜尋公司... Search company name (TSMC, 台積電, Apple)">
+
+      <div class="filter-row">
+        <span class="filter-label">TIER 等級</span>
+        <button class="chip active" data-filter="tier" data-value="all">ALL</button>
+        <button class="chip" data-filter="tier" data-value="bronze">🥉 BRONZE</button>
+        <button class="chip" data-filter="tier" data-value="silver">🥈 SILVER</button>
+        <button class="chip" data-filter="tier" data-value="gold">🥇 GOLD</button>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">TYPE 屬性</span>
+        <button class="chip active" data-filter="type" data-value="all">ALL</button>
+        <button class="chip" data-filter="type" data-value="tech">TECH</button>
+        <button class="chip" data-filter="type" data-value="manuf">MANUF</button>
+        <button class="chip" data-filter="type" data-value="ship">SHIP</button>
+        <button class="chip" data-filter="type" data-value="cons">CONS</button>
+        <button class="chip" data-filter="type" data-value="fin">FIN</button>
+        <button class="chip" data-filter="type" data-value="energy">ENERGY</button>
+      </div>
+
+      <div class="filter-row">
+        <span class="filter-label">COUNTRY 國家</span>
+        <button class="chip active" data-filter="country" data-value="all">ALL</button>
+        <button class="chip" data-filter="country" data-value="TW">🇹🇼 TW</button>
+        <button class="chip" data-filter="country" data-value="US">🇺🇸 US</button>
+        <button class="chip" data-filter="country" data-value="CN">🇨🇳 CN</button>
+        <button class="chip" data-filter="country" data-value="JP">🇯🇵 JP</button>
+        <button class="chip" data-filter="country" data-value="KR">🇰🇷 KR</button>
+        <button class="chip" data-filter="country" data-value="EU">🇪🇺 EU</button>
+        <button class="chip" data-filter="country" data-value="SA">🇸🇦 SA</button>
+      </div>
+    </div>
+
+    <div class="browser-stats">
+      <span class="count" id="catalog-count">100</span>
+      <span>顯示 / SHOWING</span>
+    </div>
+
+    <div class="card-grid" id="catalog-grid"></div>
+  </div>
+
+  <!-- ====================================================
+       SCREEN: ADMIN (Teacher dashboard)
+  ==================================================== -->
+  <div class="screen" id="screen-admin">
+    <div class="screen-title">ADMIN DASHBOARD</div>
+    <div class="screen-subtitle">老師後台 · 全班戰況</div>
+
+    <div class="admin-stats-grid" id="admin-stats">
+      <div class="admin-stat-card">
+        <div class="admin-stat-num" id="admin-total-rooms">-</div>
+        <div class="admin-stat-label">TOTAL ROOMS</div>
+      </div>
+      <div class="admin-stat-card">
+        <div class="admin-stat-num" id="admin-active-rooms">-</div>
+        <div class="admin-stat-label">PLAYING NOW</div>
+      </div>
+    </div>
+
+    <div class="admin-section-title">🎮 進行中房間 ACTIVE</div>
+    <div class="admin-room-list" id="admin-rooms"></div>
+
+    <div class="admin-section-title">🏆 戰績排行 LEADERBOARD</div>
+    <div id="admin-leaderboard"></div>
+
+    <button class="btn-secondary" onclick="refreshAdmin()" style="margin-top:20px;">↻ REFRESH 重新整理</button>
+  </div>
+
+  <!-- ====================================================
+       SCREEN: WAITING
+  ==================================================== -->
+  <div class="screen" id="screen-waiting">
+    <div class="waiting-card">
+      <div class="waiting-label">ROOM CODE 房號</div>
+      <div class="waiting-room-num" id="waiting-room-num">----</div>
+      <div class="waiting-players">
+        <div class="waiting-player" id="wp-a">
+          <div class="wp-label">PLAYER A</div>
+          <div class="wp-name" id="wp-a-name">-</div>
+        </div>
+        <div class="vs-mini">VS</div>
+        <div class="waiting-player empty" id="wp-b">
+          <div class="wp-label">PLAYER B</div>
+          <div class="wp-name" id="wp-b-name">等待中...</div>
+        </div>
+      </div>
+      <div class="waiting-status">
+        <span class="waiting-spinner"></span>
+        <span id="waiting-text">等待對手加入... Waiting for opponent...</span>
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="leaveRoom()">← LEAVE 離開房間</button>
+  </div>
+
+  <!-- ====================================================
+       SCREEN: SELECT CARD (in battle)
+  ==================================================== -->
+  <div class="screen" id="screen-select">
+    <div class="screen-title">CHOOSE FIGHTER</div>
+    <div class="screen-subtitle">選擇你的出戰卡牌</div>
+
+    <div id="opp-select-status" class="small" style="margin-bottom:8px;"></div>
+    <div id="select-progress-area"></div>
+
+    <div class="filter-bar">
+      <div class="filter-row">
+        <button class="chip active" data-select-tier="all">ALL</button>
+        <button class="chip" data-select-tier="bronze">🥉 BRONZE</button>
+        <button class="chip" data-select-tier="silver">🥈 SILVER</button>
+        <button class="chip" data-select-tier="gold">🥇 GOLD</button>
+      </div>
+      <div class="filter-row">
+        <button class="chip active" data-select-type="all">ALL TYPES</button>
+        <button class="chip" data-select-type="tech">TECH</button>
+        <button class="chip" data-select-type="manuf">MANUF</button>
+        <button class="chip" data-select-type="ship">SHIP</button>
+        <button class="chip" data-select-type="cons">CONS</button>
+        <button class="chip" data-select-type="fin">FIN</button>
+        <button class="chip" data-select-type="energy">ENERGY</button>
+      </div>
+    </div>
+
+    <div class="card-grid" id="select-card-grid"></div>
+
+    <div class="confirm-bar">
+      <button class="btn-primary" id="btn-confirm-card" disabled>
+        ⚡ CONFIRM 確認出戰
+      </button>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       SCREEN: BATTLE
+  ==================================================== -->
+  <div class="screen" id="screen-battle">
+    <div class="scenario-bar" id="scenario-bar">
+      <div class="scenario-bar-icon" id="sc-icon">⚡</div>
+      <div class="scenario-bar-info">
+        <div class="scenario-bar-name" id="sc-name">-</div>
+        <div class="scenario-bar-zh" id="sc-zh">-</div>
+        <div class="scenario-bar-eff" id="sc-eff">-</div>
+      </div>
+    </div>
+
+    <div class="turn-indicator" id="turn-indicator">- TURN -</div>
+
+    <div class="battle-card opp" id="opp-card">
+      <div class="bc-header">
+        <span class="bc-side-label">OPPONENT 對手</span>
+        <span class="bc-player-name" id="opp-player-name">-</span>
+      </div>
+      <div class="bc-body">
+        <div class="bc-icon" id="opp-icon">-</div>
+        <div class="bc-info">
+          <div class="bc-name" id="opp-name">-</div>
+          <div class="bc-name-en" id="opp-name-en">-</div>
+          <div class="hp-bar">
+            <div class="hp-fill" id="opp-hp-fill" style="width:100%"></div>
+            <div class="hp-text" id="opp-hp-text">- / -</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="battle-card you" id="my-card">
+      <div class="bc-header">
+        <span class="bc-side-label">YOU 你</span>
+        <span class="bc-player-name" id="my-player-name">-</span>
+      </div>
+      <div class="bc-body">
+        <div class="bc-icon" id="my-icon">-</div>
+        <div class="bc-info">
+          <div class="bc-name" id="my-name">-</div>
+          <div class="bc-name-en" id="my-name-en">-</div>
+          <div class="hp-bar">
+            <div class="hp-fill" id="my-hp-fill" style="width:100%"></div>
+            <div class="hp-text" id="my-hp-text">- / -</div>
+          </div>
+        </div>
+      </div>
+      <div class="skill-buttons" id="skill-buttons"></div>
+    </div>
+
+    <div class="battle-log">
+      <h4>BATTLE LOG 戰鬥紀錄</h4>
+      <div id="log-entries"></div>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       SCREEN: END
+  ==================================================== -->
+  <div class="screen" id="screen-end">
+    <div class="end-screen">
+      <div class="end-icon" id="end-icon">-</div>
+      <div class="end-title" id="end-title">-</div>
+      <div id="unlock-display"></div>
+      <div class="end-stats">
+        <div class="end-stat-row">
+          <span class="end-stat-label">YOUR CARD</span>
+          <span class="end-stat-val" id="end-my-card">-</span>
+        </div>
+        <div class="end-stat-row">
+          <span class="end-stat-label">OPPONENT</span>
+          <span class="end-stat-val" id="end-opp">-</span>
+        </div>
+        <div class="end-stat-row">
+          <span class="end-stat-label">TOTAL TURNS</span>
+          <span class="end-stat-val" id="end-turns">-</span>
+        </div>
+        <div class="end-stat-row">
+          <span class="end-stat-label">WINNER</span>
+          <span class="end-stat-val" id="end-winner" style="color:var(--neon-g)">-</span>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="leaveRoom()">↻ NEW BATTLE 再戰一場</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ====================================================
+     BOTTOM TAB BAR
+==================================================== -->
+<nav class="tab-bar" id="tab-bar">
+  <div class="tab-bar-inner">
+    <button class="tab-btn active" data-screen="home">
+      <span class="tab-icon">⚔️</span>
+      <span>BATTLE</span>
+    </button>
+    <button class="tab-btn" data-screen="catalog">
+      <span class="tab-icon">📇</span>
+      <span>CARDS</span>
+    </button>
+    <button class="tab-btn" data-screen="admin">
+      <span class="tab-icon">📊</span>
+      <span>ADMIN</span>
+    </button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbxVXGSHGyIy2IttAswfYhGKobH_l2yLqkMdfba0gj9iVQpeBm3QebyP2MhuquwKUvk/exec';
+
+const POLL_INTERVALS = {
+  waiting: 3000, selecting: 2500, oppTurn: 2000, myTurn: 0, ended: 0
+};
+
+const TYPE_COLORS = {
+  tech: '#b794ff', manuf: '#ff8855', ship: '#4dd0e1',
+  cons: '#ffd166', fin: '#5fffaa', energy: '#ff5577'
+};
+const TYPE_NAMES = {
+  tech: 'TECH', manuf: 'MANUF', ship: 'SHIP',
+  cons: 'CONS', fin: 'FIN', energy: 'ENERGY'
+};
+const COUNTRY_FLAGS = {
+  TW: '🇹🇼', US: '🇺🇸', CN: '🇨🇳', JP: '🇯🇵',
+  KR: '🇰🇷', EU: '🇪🇺', SA: '🇸🇦'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  playerName: '', roomId: '', role: null,
+  cards: [], events: [],
+  selectedCard: null, pollTimer: null, pollInterval: 0,
+  lastStatus: null, lastTurn: 0,
+  lastOppHp: null, lastMyHp: null,
+  catalogFilters: { tier: 'all', type: 'all', country: 'all' },
+  selectFilters: { tier: 'all', type: 'all' },
+  catalogSearch: '',
+  playerInfo: null,
+  preBattleInfo: null  // 戰鬥前的 player info（用來偵測解鎖）
+};
+
+// ============================================================
+// API
+// ============================================================
+async function apiGet(action, params = {}) {
+  const url = new URL(API_URL);
+  url.searchParams.set('action', action);
+  for (const k in params) url.searchParams.set(k, params[k]);
+  try {
+    const res = await fetch(url.toString());
+    const data = await res.json();
+    setConn('online');
+    return data;
+  } catch (err) { setConn('error'); throw err; }
+}
+
+async function apiPost(action, body = {}) {
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action, ...body })
+    });
+    const data = await res.json();
+    setConn('online');
+    return data;
+  } catch (err) { setConn('error'); throw err; }
+}
+
+function setConn(status) {
+  const dot = document.getElementById('conn-dot');
+  const text = document.getElementById('conn-text');
+  dot.className = 'conn-dot ' + status;
+  text.textContent = status === 'online' ? 'ONLINE' : status === 'error' ? 'ERROR' : 'CONNECTING';
+}
+
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  // 對戰中或選卡中時隱藏 tab bar
+  const hideTabBar = ['waiting', 'select', 'battle', 'end'].includes(name);
+  document.getElementById('tab-bar').style.display = hideTabBar ? 'none' : 'flex';
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    const screenName = btn.dataset.screen;
+    showScreen(screenName);
+    if (screenName === 'catalog') renderCatalog();
+    if (screenName === 'admin') refreshAdmin();
+  });
+});
+
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  setConn('connecting');
+  try {
+    const [cards, events] = await Promise.all([
+      apiGet('getCards'), apiGet('getEvents')
+    ]);
+    state.cards = cards;
+    state.events = events;
+    setConn('online');
+    renderCatalog();
+  } catch (err) {
+    document.getElementById('login-msg').innerHTML =
+      '<div class="error-msg">無法連線到伺服器，請重新整理。<br>Cannot connect.</div>';
+  }
+}
+
+// ============================================================
+// CARD RENDERER
+// ============================================================
+function renderCard(card, options = {}) {
+  const t = TYPE_COLORS[card.type];
+  const flag = COUNTRY_FLAGS[card.country] || '';
+  const tierLabel = card.tier ? card.tier.toUpperCase() : 'BRONZE';
+  const lockedClass = options.locked ? ' locked' : '';
+  const selectedClass = options.selected ? ' selected' : '';
+  const onclickAttr = options.onclick ? `onclick="${options.onclick}"` : '';
+
+  return `
+    <div class="card${lockedClass}${selectedClass}" style="--type-color:${t}"
+         data-card-id="${card.cardId}" ${onclickAttr}>
+      <span class="card-flag">${flag}</span>
+      <span class="card-id">#${card.cardId}</span>
+      <span class="card-type" style="background:${t}">${TYPE_NAMES[card.type]}</span>
+      <div class="card-name-zh">${card.nameZh}</div>
+      <div class="card-name-en">${card.nameEn}</div>
+      <div class="card-stats-mini">
+        <div class="stat-mini">
+          <div class="stat-mini-label">HP</div>
+          <div class="stat-mini-val hp">${card.hpLv}</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">ATK</div>
+          <div class="stat-mini-val atk">${card.atkLv}</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">DEF</div>
+          <div class="stat-mini-val def">${card.defLv}</div>
+        </div>
+      </div>
+      <span class="card-tier-badge ${card.tier}">${tierLabel}</span>
+    </div>
+  `;
+}
+
+// ============================================================
+// CATALOG (browse all 100 cards)
+// ============================================================
+function renderCatalog() {
+  if (state.cards.length === 0) return;
+
+  const filtered = state.cards.filter(c => {
+    if (state.catalogFilters.tier !== 'all' && c.tier !== state.catalogFilters.tier) return false;
+    if (state.catalogFilters.type !== 'all' && c.type !== state.catalogFilters.type) return false;
+    if (state.catalogFilters.country !== 'all' && c.country !== state.catalogFilters.country) return false;
+    if (state.catalogSearch) {
+      const q = state.catalogSearch.toLowerCase();
+      if (!c.nameZh.toLowerCase().includes(q) &&
+          !c.nameEn.toLowerCase().includes(q) &&
+          !c.cardId.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  document.getElementById('catalog-count').textContent = filtered.length;
+  const grid = document.getElementById('catalog-grid');
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;">
+        <div class="big">🔍</div>
+        <div>沒有符合條件的卡牌</div>
+        <div>No cards match the filters</div>
+      </div>`;
+  } else {
+    grid.innerHTML = filtered.map(c => renderCard(c)).join('');
+  }
+}
+
+// 篩選 chip 點擊
+document.querySelectorAll('.filter-bar .chip[data-filter]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const filter = chip.dataset.filter;
+    const value = chip.dataset.value;
+    state.catalogFilters[filter] = value;
+    document.querySelectorAll(`.chip[data-filter="${filter}"]`).forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderCatalog();
+  });
+});
+
+// 搜尋
+document.getElementById('search-input').addEventListener('input', e => {
+  state.catalogSearch = e.target.value.trim();
+  renderCatalog();
+});
+
+// ============================================================
+// LOGIN
+// ============================================================
+document.getElementById('btn-join').addEventListener('click', joinBattle);
+document.getElementById('input-room').addEventListener('keydown', e => {
+  if (e.key === 'Enter') joinBattle();
+});
+document.getElementById('input-name').addEventListener('change', loadPlayerProgress);
+
+async function loadPlayerProgress() {
+  const name = document.getElementById('input-name').value.trim();
+  const area = document.getElementById('player-progress-area');
+  if (!name) { area.innerHTML = ''; return; }
+  try {
+    const info = await apiGet('getPlayer', { playerName: name });
+    if (info.error) return;
+    state.playerInfo = info;
+    area.innerHTML = renderProgressCard(info);
+  } catch (err) {}
+}
+
+function renderProgressCard(info) {
+  const tiers = ['bronze', 'silver', 'gold'];
+  const tierLabels = { bronze: '🥉 BRONZE', silver: '🥈 SILVER', gold: '🥇 GOLD' };
+
+  let nextText = '';
+  let progressPct = 100;
+  if (info.nextUnlock) {
+    nextText = `再贏 ${info.nextUnlock.winsNeeded - info.nextUnlock.currentWins} 場解鎖 ${tierLabels[info.nextUnlock.tier]}`;
+    progressPct = (info.nextUnlock.currentWins / info.nextUnlock.winsNeeded) * 100;
+  } else {
+    nextText = '🏆 全部解鎖！MAX UNLOCKED';
+  }
+
+  return `
+    <div class="progress-card">
+      <div class="progress-header">
+        <div class="progress-title">${info.playerName} · ${info.battles} 場</div>
+        <div class="progress-stats">${info.wins}W / ${info.losses}L</div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${progressPct}%"></div>
+      </div>
+      <div class="small" style="margin-top:6px;">${nextText}</div>
+      <div class="progress-tier-list">
+        ${tiers.map(t => `
+          <div class="progress-tier ${info.unlockedTiers.includes(t) ? 'unlocked ' + t : ''}">
+            ${tierLabels[t]}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+async function joinBattle() {
+  const name = document.getElementById('input-name').value.trim();
+  const roomId = document.getElementById('input-room').value.trim();
+  const msg = document.getElementById('login-msg');
+
+  if (!name) { msg.innerHTML = '<div class="error-msg">請輸入姓名</div>'; return; }
+  if (!roomId) { msg.innerHTML = '<div class="error-msg">請輸入房號</div>'; return; }
+
+  document.getElementById('btn-join').disabled = true;
+  msg.innerHTML = '<div class="info-msg">連線中...</div>';
+
+  try {
+    // 先取得玩家資訊（用來決定哪些卡可選）
+    const playerInfo = await apiGet('getPlayer', { playerName: name });
+    state.playerInfo = playerInfo;
+    state.preBattleInfo = JSON.parse(JSON.stringify(playerInfo)); // 深拷貝
+
+    const result = await apiPost('joinRoom', { roomId, playerName: name });
+    if (result.error) {
+      msg.innerHTML = `<div class="error-msg">${result.error}</div>`;
+      document.getElementById('btn-join').disabled = false;
+      return;
+    }
+    state.playerName = name;
+    state.roomId = roomId;
+    state.role = result.role;
+
+    document.getElementById('waiting-room-num').textContent = roomId;
+    document.getElementById('wp-a-name').textContent = result.role === 'A' ? name + ' (你)' : '-';
+    document.getElementById('wp-b-name').textContent = result.role === 'B' ? name + ' (你)' : '等待中...';
+    document.getElementById('wp-' + (result.role === 'A' ? 'a' : 'b')).classList.add('you');
+    document.getElementById('wp-' + (result.role === 'A' ? 'b' : 'a')).classList.add('empty');
+
+    showScreen('waiting');
+    startPolling();
+  } catch (err) {
+    msg.innerHTML = '<div class="error-msg">連線失敗，請檢查網路</div>';
+    document.getElementById('btn-join').disabled = false;
+  }
+}
+
+function leaveRoom() {
+  stopPolling();
+  state.roomId = '';
+  state.role = null;
+  state.selectedCard = null;
+  state.lastStatus = null;
+  document.getElementById('btn-join').disabled = false;
+  document.getElementById('login-msg').innerHTML = '';
+  // 重新載入玩家進度
+  loadPlayerProgress();
+  showScreen('home');
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab-btn[data-screen="home"]').classList.add('active');
+}
+
+// ============================================================
+// POLLING
+// ============================================================
+function startPolling(interval = 3000) {
+  stopPolling();
+  state.pollInterval = interval;
+  pollOnce();
+  state.pollTimer = setInterval(pollOnce, interval);
+}
+function stopPolling() {
+  if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+}
+function adjustPolling(newInt) {
+  if (newInt !== state.pollInterval) {
+    if (newInt === 0) stopPolling();
+    else startPolling(newInt);
+  }
+}
+async function pollOnce() {
+  try {
+    const room = await apiGet('getRoom', { roomId: state.roomId });
+    if (room.error) return;
+    handleRoomUpdate(room);
+  } catch (err) {}
+}
+
+function handleRoomUpdate(room) {
+  const prevStatus = state.lastStatus;
+  state.lastStatus = room.status;
+  switch (room.status) {
+    case 'waiting': adjustPolling(POLL_INTERVALS.waiting); break;
+    case 'selecting':
+      if (prevStatus !== 'selecting') showCardSelect(room);
+      else updateOppSelectStatus(room);
+      adjustPolling(POLL_INTERVALS.selecting);
+      break;
+    case 'playing':
+      if (prevStatus !== 'playing') showBattle(room);
+      else updateBattle(room);
+      const isMyTurn = room.currentPlayer === state.role;
+      adjustPolling(isMyTurn ? POLL_INTERVALS.myTurn : POLL_INTERVALS.oppTurn);
+      break;
+    case 'ended':
+      if (prevStatus !== 'ended') showEnd(room);
+      adjustPolling(POLL_INTERVALS.ended);
+      break;
+  }
+}
+
+// ============================================================
+// CARD SELECT (in battle)
+// ============================================================
+function showCardSelect(room) {
+  renderSelectGrid();
+  showScreen('select');
+  updateOppSelectStatus(room);
+
+  // 顯示玩家解鎖進度
+  if (state.playerInfo) {
+    document.getElementById('select-progress-area').innerHTML = renderProgressCard(state.playerInfo);
+  }
+}
+
+function renderSelectGrid() {
+  const unlockedTiers = state.playerInfo ? state.playerInfo.unlockedTiers : ['bronze'];
+  const filtered = state.cards.filter(c => {
+    if (state.selectFilters.tier !== 'all' && c.tier !== state.selectFilters.tier) return false;
+    if (state.selectFilters.type !== 'all' && c.type !== state.selectFilters.type) return false;
+    return true;
+  });
+
+  document.getElementById('select-card-grid').innerHTML = filtered.map(c => {
+    const isLocked = !unlockedTiers.includes(c.tier);
+    const isSelected = state.selectedCard === c.cardId;
+    return renderCard(c, {
+      locked: isLocked,
+      selected: isSelected,
+      onclick: isLocked ? `showLockedMsg('${c.tier}')` : `selectCard('${c.cardId}')`
+    });
+  }).join('');
+}
+
+document.querySelectorAll('.chip[data-select-tier]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    state.selectFilters.tier = chip.dataset.selectTier;
+    document.querySelectorAll('.chip[data-select-tier]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderSelectGrid();
+  });
+});
+document.querySelectorAll('.chip[data-select-type]').forEach(chip => {
+  chip.addEventListener('click', () => {
+    state.selectFilters.type = chip.dataset.selectType;
+    document.querySelectorAll('.chip[data-select-type]').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    renderSelectGrid();
+  });
+});
+
+function showLockedMsg(tier) {
+  const winsNeeded = tier === 'silver' ? 5 : 15;
+  const currentWins = state.playerInfo ? state.playerInfo.wins : 0;
+  showToast(`🔒 ${tier.toUpperCase()} 卡需要累計勝場 ${winsNeeded}（你目前 ${currentWins}）`);
+}
+
+function selectCard(cardId) {
+  state.selectedCard = cardId;
+  document.querySelectorAll('#select-card-grid .card').forEach(el => {
+    el.classList.toggle('selected', el.dataset.cardId === cardId);
+  });
+  document.getElementById('btn-confirm-card').disabled = false;
+}
+
+document.getElementById('btn-confirm-card').addEventListener('click', async () => {
+  if (!state.selectedCard) return;
+  const btn = document.getElementById('btn-confirm-card');
+  btn.disabled = true;
+  btn.textContent = '✓ 已確認 · 等待對手...';
+
+  try {
+    const result = await apiPost('selectCard', {
+      roomId: state.roomId, playerName: state.playerName, cardId: state.selectedCard
+    });
+    if (result.error) {
+      showToast(result.error);
+      btn.disabled = false;
+      btn.textContent = '⚡ CONFIRM 確認出戰';
+    }
+  } catch (err) {
+    showToast('連線失敗');
+    btn.disabled = false;
+  }
+});
+
+function updateOppSelectStatus(room) {
+  const oppCard = state.role === 'A' ? room.cardB : room.cardA;
+  const oppName = state.role === 'A' ? room.playerB : room.playerA;
+  const el = document.getElementById('opp-select-status');
+  if (oppCard) {
+    el.innerHTML = `<span style="color:var(--neon-g)">✓ ${oppName} 已選好</span>`;
+  } else {
+    el.innerHTML = `<span class="small">⏳ ${oppName} 選卡中...</span>`;
+  }
+}
+
+// ============================================================
+// BATTLE
+// ============================================================
+function getEventInfo(eventId) {
+  return state.events.find(e => e.eventId === eventId) || {
+    icon: '⚡', nameEn: eventId, nameZh: '-', descEn: '-', descZh: '-'
+  };
+}
+
+function showBattle(room) {
+  state.lastTurn = room.turn;
+  const event = getEventInfo(room.scenario);
+  document.getElementById('sc-icon').textContent = event.icon;
+  document.getElementById('sc-name').textContent = event.nameEn;
+  document.getElementById('sc-zh').textContent = event.nameZh;
+  document.getElementById('sc-eff').textContent = event.descEn || event.descZh;
+
+  const myCardId = state.role === 'A' ? room.cardA : room.cardB;
+  const oppCardId = state.role === 'A' ? room.cardB : room.cardA;
+  const myCard = state.cards.find(c => c.cardId === String(myCardId));
+  const oppCard = state.cards.find(c => c.cardId === String(oppCardId));
+
+  document.getElementById('opp-icon').textContent = oppCard.nameEn.split(' ')[0].slice(0, 4);
+  document.getElementById('opp-icon').style.background = TYPE_COLORS[oppCard.type];
+  document.getElementById('opp-card').style.setProperty('--type-color', TYPE_COLORS[oppCard.type]);
+  document.getElementById('opp-name').textContent = oppCard.nameZh + ' · ' + TYPE_NAMES[oppCard.type];
+  document.getElementById('opp-name-en').textContent = (COUNTRY_FLAGS[oppCard.country] || '') + ' ' + oppCard.nameEn;
+  document.getElementById('opp-player-name').textContent = state.role === 'A' ? room.playerB : room.playerA;
+
+  document.getElementById('my-icon').textContent = myCard.nameEn.split(' ')[0].slice(0, 4);
+  document.getElementById('my-icon').style.background = TYPE_COLORS[myCard.type];
+  document.getElementById('my-card').style.setProperty('--type-color', TYPE_COLORS[myCard.type]);
+  document.getElementById('my-name').textContent = myCard.nameZh + ' · ' + TYPE_NAMES[myCard.type];
+  document.getElementById('my-name-en').textContent = (COUNTRY_FLAGS[myCard.country] || '') + ' ' + myCard.nameEn;
+  document.getElementById('my-player-name').textContent = state.playerName;
+
+  const skills = [
+    { name: myCard.skill1Name, dmg: myCard.skill1Dmg, idx: 0 },
+    { name: myCard.skill2Name, dmg: myCard.skill2Dmg, idx: 1 }
+  ];
+  document.getElementById('skill-buttons').innerHTML = skills.map(s => `
+    <button class="skill-btn" data-skill="${s.idx}" onclick="useSkill(${s.idx})">
+      <div class="skill-btn-row">
+        <div><span class="skill-btn-name">${s.name}</span></div>
+        <span class="skill-btn-dmg">${s.dmg}</span>
+      </div>
+    </button>
+  `).join('');
+
+  document.getElementById('log-entries').innerHTML = '';
+  log(`⚡ BATTLE START · 戰鬥開始！`, 'crit');
+  log(`${event.icon} Scenario: ${event.nameEn} (${event.nameZh})`, 'crit');
+  log(`▶ ${event.descEn || event.descZh}`);
+  state.lastOppHp = null;
+  state.lastMyHp = null;
+
+  showScreen('battle');
+  updateBattle(room);
+}
+
+function updateBattle(room) {
+  const myHp = state.role === 'A' ? room.hpA : room.hpB;
+  const myMaxHp = state.role === 'A' ? room.maxHpA : room.maxHpB;
+  const oppHp = state.role === 'A' ? room.hpB : room.hpA;
+  const oppMaxHp = state.role === 'A' ? room.maxHpB : room.maxHpA;
+
+  if (state.lastOppHp !== null && oppHp < state.lastOppHp) {
+    document.getElementById('opp-card').classList.add('shake');
+    setTimeout(() => document.getElementById('opp-card').classList.remove('shake'), 400);
+  }
+  if (state.lastMyHp !== null && myHp < state.lastMyHp) {
+    const dmg = state.lastMyHp - myHp;
+    log(`◀ 對手對你造成 <b>${dmg}</b> 傷害！`, 'dmg');
+    document.getElementById('my-card').classList.add('shake');
+    setTimeout(() => document.getElementById('my-card').classList.remove('shake'), 400);
+  }
+  state.lastOppHp = oppHp;
+  state.lastMyHp = myHp;
+
+  const myPct = Math.max(0, (myHp / myMaxHp) * 100);
+  const oppPct = Math.max(0, (oppHp / oppMaxHp) * 100);
+  const myFill = document.getElementById('my-hp-fill');
+  const oppFill = document.getElementById('opp-hp-fill');
+  myFill.style.width = myPct + '%';
+  oppFill.style.width = oppPct + '%';
+  myFill.className = 'hp-fill ' + (myPct < 25 ? 'critical' : myPct < 50 ? 'low' : '');
+  oppFill.className = 'hp-fill ' + (oppPct < 25 ? 'critical' : oppPct < 50 ? 'low' : '');
+  document.getElementById('my-hp-text').textContent = `${myHp} / ${myMaxHp}`;
+  document.getElementById('opp-hp-text').textContent = `${oppHp} / ${oppMaxHp}`;
+
+  const isMyTurn = room.currentPlayer === state.role;
+  const indicator = document.getElementById('turn-indicator');
+  if (isMyTurn) {
+    indicator.className = 'turn-indicator your';
+    indicator.textContent = `▶ YOUR TURN · TURN ${room.turn}`;
+  } else {
+    indicator.className = 'turn-indicator opp';
+    indicator.textContent = `◀ OPPONENT'S TURN · TURN ${room.turn}`;
+  }
+  if (room.turn > state.lastTurn) {
+    state.lastTurn = room.turn;
+    log(`— Turn ${room.turn} —`);
+  }
+  document.querySelectorAll('.skill-btn').forEach(btn => { btn.disabled = !isMyTurn; });
+}
+
+async function useSkill(skillIndex) {
+  document.querySelectorAll('.skill-btn').forEach(b => b.disabled = true);
+  try {
+    const result = await apiPost('useSkill', {
+      roomId: state.roomId, playerName: state.playerName, skillIndex
+    });
+    if (result.error) {
+      showToast(result.error);
+      document.querySelectorAll('.skill-btn').forEach(b => b.disabled = false);
+      return;
+    }
+    let effMsg = '';
+    if (result.effect === 'super_effective') effMsg = ' ★ SUPER EFFECTIVE！';
+    else if (result.effect === 'not_effective') effMsg = ' ▼ Not very effective';
+    log(`▶ YOU used <b>${result.skillName}</b> → <b>${result.damage}</b> DMG${effMsg}`,
+        result.effect === 'super_effective' ? 'crit' : 'dmg');
+    pollOnce();
+  } catch (err) {
+    showToast('連線失敗');
+    document.querySelectorAll('.skill-btn').forEach(b => b.disabled = false);
+  }
+}
+
+function log(msg, cls = '') {
+  const div = document.createElement('div');
+  div.className = 'log-entry ' + cls;
+  div.innerHTML = msg;
+  const log = document.getElementById('log-entries');
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ============================================================
+// END SCREEN (with unlock detection)
+// ============================================================
+async function showEnd(room) {
+  stopPolling();
+  const won = room.winner === state.playerName;
+  const myCardId = state.role === 'A' ? room.cardA : room.cardB;
+  const oppCardId = state.role === 'A' ? room.cardB : room.cardA;
+  const myCard = state.cards.find(c => c.cardId === String(myCardId));
+  const oppCard = state.cards.find(c => c.cardId === String(oppCardId));
+  const oppName = state.role === 'A' ? room.playerB : room.playerA;
+
+  document.getElementById('end-icon').textContent = won ? 'WIN' : 'LOSE';
+  document.getElementById('end-icon').className = 'end-icon ' + (won ? 'win' : 'lose');
+  document.getElementById('end-title').textContent = won ? '🏆 VICTORY 勝利！' : '💀 DEFEAT 戰敗';
+  document.getElementById('end-my-card').textContent = `${myCard.nameZh} (${myCard.nameEn})`;
+  document.getElementById('end-opp').textContent = `${oppName} · ${oppCard.nameZh}`;
+  document.getElementById('end-turns').textContent = room.turn;
+  document.getElementById('end-winner').textContent = room.winner;
+  document.getElementById('end-winner').style.color = won ? 'var(--neon-g)' : 'var(--danger)';
+
+  // 重新取得玩家資訊，偵測是否解鎖新 tier
+  document.getElementById('unlock-display').innerHTML = '';
+  if (won && state.preBattleInfo) {
+    try {
+      const newInfo = await apiGet('getPlayer', { playerName: state.playerName });
+      const oldTiers = state.preBattleInfo.unlockedTiers;
+      const newTiers = newInfo.unlockedTiers;
+      const newlyUnlocked = newTiers.filter(t => !oldTiers.includes(t));
+      if (newlyUnlocked.length > 0) {
+        const tierNames = { silver: '🥈 SILVER 中階解鎖！', gold: '🥇 GOLD 進階解鎖！' };
+        document.getElementById('unlock-display').innerHTML = `
+          <div class="unlock-banner">
+            <div class="unlock-banner-title">UNLOCKED!</div>
+            <div class="unlock-banner-zh">${tierNames[newlyUnlocked[0]] || newlyUnlocked[0]}</div>
+          </div>`;
+      }
+      state.playerInfo = newInfo;
+    } catch (err) {}
+  }
+  showScreen('end');
+}
+
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+async function refreshAdmin() {
+  try {
+    const result = await apiGet('getAllRooms');
+    const rooms = result.rooms || [];
+    document.getElementById('admin-total-rooms').textContent = rooms.length;
+    document.getElementById('admin-active-rooms').textContent =
+      rooms.filter(r => r.status === 'playing' || r.status === 'selecting').length;
+
+    // 房間列表
+    const activeRooms = rooms.filter(r => r.status !== 'ended');
+    const roomList = document.getElementById('admin-rooms');
+    if (activeRooms.length === 0) {
+      roomList.innerHTML = '<div class="small center" style="padding:20px;">目前無進行中房間</div>';
+    } else {
+      roomList.innerHTML = activeRooms.map(r => `
+        <div class="admin-room-item">
+          <span class="roomid">#${r.roomId}</span>
+          <span class="players">${r.playerA || '?'} <span style="color:var(--text-3)">vs</span> ${r.playerB || '等待'}</span>
+          <span class="status status-${r.status}">${r.status}</span>
+        </div>
+      `).join('');
+    }
+
+    // 從 ended 房間統計排行
+    const playerStats = {};
+    rooms.filter(r => r.status === 'ended' && r.winner).forEach(r => {
+      const winner = r.winner;
+      const loser = (winner === r.playerA) ? r.playerB : r.playerA;
+      if (!playerStats[winner]) playerStats[winner] = { wins: 0, losses: 0 };
+      if (!playerStats[loser]) playerStats[loser] = { wins: 0, losses: 0 };
+      playerStats[winner].wins++;
+      if (loser) playerStats[loser].losses++;
+    });
+
+    const sorted = Object.entries(playerStats)
+      .sort((a, b) => b[1].wins - a[1].wins)
+      .slice(0, 10);
+
+    const lb = document.getElementById('admin-leaderboard');
+    if (sorted.length === 0) {
+      lb.innerHTML = '<div class="small center" style="padding:20px;">尚無戰績</div>';
+    } else {
+      lb.innerHTML = sorted.map(([name, stats], idx) => {
+        const total = stats.wins + stats.losses;
+        const winRate = total > 0 ? Math.round(stats.wins / total * 100) : 0;
+        return `
+          <div class="leaderboard-row ${idx === 0 ? 'top1' : idx === 1 ? 'top2' : idx === 2 ? 'top3' : ''}">
+            <span class="rank">${idx + 1}</span>
+            <span class="name">${name}</span>
+            <span class="wins">${stats.wins}W</span>
+            <span class="ratio">${winRate}% · ${total} 場</span>
+          </div>
+        `;
+      }).join('');
+    }
+  } catch (err) {
+    showToast('無法載入後台資料');
+  }
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
