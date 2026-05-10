@@ -1075,7 +1075,7 @@
   <header>
     <div class="brand">
       <h1>CORP BATTLE</h1>
-      <span class="ver">v3 · 100</span>
+      <span class="ver">v3.2 · 100</span>
     </div>
     <div class="conn-indicator">
       <span class="conn-dot" id="conn-dot"></span>
@@ -1194,13 +1194,25 @@
       </div>
     </div>
 
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button class="chip" id="admin-auto-toggle" style="flex:1; padding:8px;">
+        ⏸ AUTO-REFRESH: OFF
+      </button>
+      <button class="chip" onclick="refreshAdmin()" style="flex:1; padding:8px;">
+        ↻ REFRESH NOW
+      </button>
+    </div>
+
     <div class="admin-section-title">🎮 進行中房間 ACTIVE</div>
     <div class="admin-room-list" id="admin-rooms"></div>
 
+    <div class="admin-section-title" style="cursor:pointer;" onclick="toggleHistory()">
+      📜 已結束房間 HISTORY <span id="history-toggle">▼</span>
+    </div>
+    <div class="admin-room-list" id="admin-history" style="display:none;"></div>
+
     <div class="admin-section-title">🏆 戰績排行 LEADERBOARD</div>
     <div id="admin-leaderboard"></div>
-
-    <button class="btn-secondary" onclick="refreshAdmin()" style="margin-top:20px;">↻ REFRESH 重新整理</button>
   </div>
 
   <!-- ====================================================
@@ -1408,13 +1420,15 @@ let state = {
   playerName: '', roomId: '', role: null,
   cards: [], events: [],
   selectedCard: null, pollTimer: null, pollInterval: 0,
+  heartbeatTimer: null, adminTimer: null,
   lastStatus: null, lastTurn: 0,
   lastOppHp: null, lastMyHp: null,
   catalogFilters: { tier: 'all', type: 'all', country: 'all' },
   selectFilters: { tier: 'all', type: 'all' },
   catalogSearch: '',
   playerInfo: null,
-  preBattleInfo: null  // 戰鬥前的 player info（用來偵測解鎖）
+  preBattleInfo: null,
+  adminAutoRefresh: false
 };
 
 // ============================================================
@@ -1470,7 +1484,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     const screenName = btn.dataset.screen;
     showScreen(screenName);
     if (screenName === 'catalog') renderCatalog();
-    if (screenName === 'admin') refreshAdmin();
+    if (screenName === 'admin') {
+      refreshAdmin();
+    } else {
+      stopAdminAutoRefresh();
+    }
   });
 });
 
@@ -1597,7 +1615,13 @@ document.getElementById('btn-join').addEventListener('click', joinBattle);
 document.getElementById('input-room').addEventListener('keydown', e => {
   if (e.key === 'Enter') joinBattle();
 });
-document.getElementById('input-name').addEventListener('change', loadPlayerProgress);
+
+// debounce 用：避免每按一個鍵就 call API
+let nameInputTimer = null;
+document.getElementById('input-name').addEventListener('input', () => {
+  clearTimeout(nameInputTimer);
+  nameInputTimer = setTimeout(loadPlayerProgress, 600);
+});
 
 async function loadPlayerProgress() {
   const name = document.getElementById('input-name').value.trim();
@@ -1680,26 +1704,50 @@ async function joinBattle() {
 
     showScreen('waiting');
     startPolling();
+    startHeartbeat();
   } catch (err) {
     msg.innerHTML = '<div class="error-msg">連線失敗，請檢查網路</div>';
     document.getElementById('btn-join').disabled = false;
   }
 }
 
-function leaveRoom() {
+async function leaveRoom() {
   stopPolling();
+  stopHeartbeat();
+
+  // 通知後端清理
+  if (state.roomId && state.playerName) {
+    try {
+      await apiPost('leaveRoom', { roomId: state.roomId, playerName: state.playerName });
+    } catch (err) {}
+  }
+
   state.roomId = '';
   state.role = null;
   state.selectedCard = null;
   state.lastStatus = null;
   document.getElementById('btn-join').disabled = false;
   document.getElementById('login-msg').innerHTML = '';
-  // 重新載入玩家進度
   loadPlayerProgress();
   showScreen('home');
   document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
   document.querySelector('.tab-btn[data-screen="home"]').classList.add('active');
 }
+
+// 關閉瀏覽器/分頁時自動通知後端離開
+window.addEventListener('beforeunload', () => {
+  if (state.roomId && state.playerName) {
+    // 用 sendBeacon 在頁面關閉時送出，比 fetch 可靠
+    const data = JSON.stringify({
+      action: 'leaveRoom',
+      roomId: state.roomId,
+      playerName: state.playerName
+    });
+    try {
+      navigator.sendBeacon(API_URL, new Blob([data], { type: 'text/plain' }));
+    } catch (err) {}
+  }
+});
 
 // ============================================================
 // POLLING
@@ -1725,6 +1773,21 @@ async function pollOnce() {
     if (room.error) return;
     handleRoomUpdate(room);
   } catch (err) {}
+}
+
+// ============ HEARTBEAT (告訴後端我還活著) ============
+function startHeartbeat() {
+  stopHeartbeat();
+  // 每 30 秒送一次心跳，後端會更新 lastUpdated 避免被當廢棄房間清掉
+  state.heartbeatTimer = setInterval(async () => {
+    if (!state.roomId || !state.playerName) return;
+    try {
+      await apiPost('heartbeat', { roomId: state.roomId, playerName: state.playerName });
+    } catch (err) {}
+  }, 30000);
+}
+function stopHeartbeat() {
+  if (state.heartbeatTimer) { clearInterval(state.heartbeatTimer); state.heartbeatTimer = null; }
 }
 
 function handleRoomUpdate(room) {
@@ -1989,6 +2052,7 @@ function log(msg, cls = '') {
 // ============================================================
 async function showEnd(room) {
   stopPolling();
+  stopHeartbeat();
   const won = room.winner === state.playerName;
   const myCardId = state.role === 'A' ? room.cardA : room.cardB;
   const oppCardId = state.role === 'A' ? room.cardB : room.cardA;
@@ -2030,6 +2094,42 @@ async function showEnd(room) {
 // ============================================================
 // ADMIN DASHBOARD
 // ============================================================
+function startAdminAutoRefresh() {
+  stopAdminAutoRefresh();
+  state.adminAutoRefresh = true;
+  document.getElementById('admin-auto-toggle').innerHTML = '▶ AUTO-REFRESH: ON';
+  document.getElementById('admin-auto-toggle').classList.add('active');
+  state.adminTimer = setInterval(refreshAdmin, 10000); // 10 秒一次
+}
+function stopAdminAutoRefresh() {
+  if (state.adminTimer) { clearInterval(state.adminTimer); state.adminTimer = null; }
+  state.adminAutoRefresh = false;
+  const btn = document.getElementById('admin-auto-toggle');
+  if (btn) {
+    btn.innerHTML = '⏸ AUTO-REFRESH: OFF';
+    btn.classList.remove('active');
+  }
+}
+
+function toggleHistory() {
+  const el = document.getElementById('admin-history');
+  const t = document.getElementById('history-toggle');
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? 'flex' : 'none';
+  t.textContent = isHidden ? '▲' : '▼';
+}
+
+// auto-refresh toggle 按鈕
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('admin-auto-toggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      if (state.adminAutoRefresh) stopAdminAutoRefresh();
+      else startAdminAutoRefresh();
+    });
+  }
+});
+
 async function refreshAdmin() {
   try {
     const result = await apiGet('getAllRooms');
@@ -2038,7 +2138,7 @@ async function refreshAdmin() {
     document.getElementById('admin-active-rooms').textContent =
       rooms.filter(r => r.status === 'playing' || r.status === 'selecting').length;
 
-    // 房間列表
+    // 進行中房間
     const activeRooms = rooms.filter(r => r.status !== 'ended');
     const roomList = document.getElementById('admin-rooms');
     if (activeRooms.length === 0) {
@@ -2053,15 +2153,30 @@ async function refreshAdmin() {
       `).join('');
     }
 
-    // 從 ended 房間統計排行
+    // 已結束房間（折疊區）
+    const endedRooms = rooms.filter(r => r.status === 'ended');
+    const historyList = document.getElementById('admin-history');
+    if (endedRooms.length === 0) {
+      historyList.innerHTML = '<div class="small center" style="padding:12px;">無歷史紀錄</div>';
+    } else {
+      historyList.innerHTML = endedRooms.slice(-15).reverse().map(r => `
+        <div class="admin-room-item">
+          <span class="roomid">#${r.roomId}</span>
+          <span class="players">🏆 <b>${r.winner || '?'}</b> · ${r.playerA} vs ${r.playerB}</span>
+          <span class="status status-ended">ended</span>
+        </div>
+      `).join('');
+    }
+
+    // 排行榜（從 ended 房間統計）
     const playerStats = {};
-    rooms.filter(r => r.status === 'ended' && r.winner).forEach(r => {
+    rooms.filter(r => r.status === 'ended' && r.winner && r.winner !== '(timeout)').forEach(r => {
       const winner = r.winner;
       const loser = (winner === r.playerA) ? r.playerB : r.playerA;
       if (!playerStats[winner]) playerStats[winner] = { wins: 0, losses: 0 };
-      if (!playerStats[loser]) playerStats[loser] = { wins: 0, losses: 0 };
+      if (loser && !playerStats[loser]) playerStats[loser] = { wins: 0, losses: 0 };
       playerStats[winner].wins++;
-      if (loser) playerStats[loser].losses++;
+      if (loser && playerStats[loser]) playerStats[loser].losses++;
     });
 
     const sorted = Object.entries(playerStats)
